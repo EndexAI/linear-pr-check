@@ -23,7 +23,7 @@ async function run() {
     const issue = issuecheck.findIssue(core.getInput("prefix"), title, description, branch);
     core.info(`Issue ${issue} found`);
 
-    // Check if there's an existing comment from our action and remove it
+    // Remove existing comment if any
     await removeExistingComment(client, owner, repo, pr_number);
 
   } catch (error) {
@@ -40,14 +40,33 @@ Linear supports four ways to link issues with your pull requests:
 
     core.info(errorMessage);
 
-    // Leave a comment on the PR
-    await client.issues.createComment({
-      owner,
-      repo,
-      issue_number: pr_number,
-      body: "Issue not found in PR: All PRs must have an associated issue.\n\n" + errorMessage
-    });
+    // Check if comment already exists, if not, create one
+    const commentExists = await checkExistingComment(client, owner, repo, pr_number);
+    if (!commentExists) {
+      await client.issues.createComment({
+        owner,
+        repo,
+        issue_number: pr_number,
+        body: "Issue not found in PR: All PRs must have an associated issue.\n\n" + errorMessage
+      });
+      core.info('Added comment about missing issue');
+    } else {
+      core.info('Comment about missing issue already exists');
+    }
   }
+}
+
+async function checkExistingComment(client, owner, repo, pr_number) {
+  const {data: comments} = await client.issues.listComments({
+    owner,
+    repo,
+    issue_number: pr_number
+  });
+
+  return comments.some(comment => 
+    comment.user.type === 'Bot' && 
+    comment.body.startsWith("Issue not found in PR: All PRs must have an associated issue.")
+  );
 }
 
 async function removeExistingComment(client, owner, repo, pr_number) {
