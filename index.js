@@ -3,6 +3,12 @@ const github = require('@actions/github');
 const issuecheck = require('./issuecheck.js')
 
 async function run() {
+  // Check if the event is a merge queue event
+  if (github.context.eventName === 'merge_group') {
+    core.info('This is a merge queue event. Skipping issue check.');
+    return;
+  }
+
   const authToken = core.getInput('github_token', {required: true});
   const client = new github.GitHub(authToken);
   const owner = github.context.payload.pull_request.base.user.login;
