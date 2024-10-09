@@ -1,7 +1,7 @@
 module.exports = {
   findIssue: (prefix, title, description, branch) => {
-    const titleRegex = RegExp(`(${prefix}\\d{1,}) ?`);
-    const branchRegex = RegExp(`(${prefix.toLowerCase()}\\d{1,})-?`);
+    const titleRegex = RegExp(`(${prefix}-\\d{1,}) ?`);
+    const branchRegex = RegExp(`(${prefix.toLowerCase()}-\\d{1,})-?`);
     const urlRegex = RegExp(`https://linear\\.app/\\w+/issue/(${prefix}-\\d+)/\\S*`, 'i');
 
     if (titleRegex.test(title)) {
