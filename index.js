@@ -23,16 +23,33 @@ async function run() {
 
     const issue = issuecheck.findIssue(core.getInput("prefix"), title, description, branch);
     core.info(`Issue ${issue} found`)
-  } catch {
+  } catch (error) {
     core.setFailed("Issue not found in PR: All PRs must have an associated issue");
-    core.info(`
+    
+    const errorMessage = `
 Linear supports four ways to link issues with your pull requests:
 
 1. Include *issue ID* in the branch name
 2. Include *issue ID* in the PR title
 3. Include *issue ID* with a magic word in the PR description (e.g., Fixes ENG-123) similar to GitHub Issues
 4. Include the issue URL in the PR description (e.g., https://linear.app/yourteam/issue/ENG-123/issue-title)
-`)
+`;
+
+    core.info(errorMessage);
+
+    // Leave a comment on the PR
+    const authToken = core.getInput('github_token', {required: true});
+    const client = new github.GitHub(authToken);
+    const owner = github.context.payload.pull_request.base.user.login;
+    const repo = github.context.payload.pull_request.base.repo.name;
+    const pr_number = github.context.payload.pull_request.number;
+
+    await client.issues.createComment({
+      owner,
+      repo,
+      issue_number: pr_number,
+      body: "Issue not found in PR: All PRs must have an associated issue.\n\n" + errorMessage
+    });
   }
 }
 
