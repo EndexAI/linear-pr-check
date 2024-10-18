@@ -23,6 +23,13 @@ async function run() {
     });
 
     const title = pullRequest.title;
+
+    // Skip the check if the title starts with "no-issue:"
+    if (title.toLowerCase().startsWith('no-issue:')) {
+      core.info('PR title starts with "no-issue:". Skipping issue check.');
+      return;
+    }
+
     const description = pullRequest.body;
     const branch = pullRequest.head.ref;
 
